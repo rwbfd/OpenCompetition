@@ -36,4 +36,7 @@ A collection of algorithms for data science competition. We will only focus deve
 4. If a feature is desirable, one can email ran.wang.math@gmail.com for the possibility of implementation. 
 
 ## Other Useful Resources
+1. https://www.overleaf.com/read/bnnnnkffbhsw. Some tricks for data mining.
+2. 链接：https://pan.baidu.com/s/1dWlM9Z_92Y7zUzF_18pBrw 提取码：slpv. A huge collection of books and papers.
+
 
