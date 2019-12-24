@@ -23,7 +23,7 @@ A collection of algorithms for data science competition. We will only focus deve
 
 ## Character
 1. Code related to algorithms are mostly writen in python and R. Performance critical ones are written in C++ (linked to Python using Cython).
-2. Code will be written in Tensorflow 1.13 and Tensorflow 2.0. The reasons to involve two framework is that currently TPU only supports 1.13. 
+2. Code will be written in Tensorflow 1.13 and PyTorch. The reasons to involve two framework is that currently TPU only supports 1.13 and Pytorch.
 3. An example will be offered on how to deploy models using TensorflowServer, Kubernetes and Istio. 
 4. We encourage users to record their experience in the demo file. We will also actively collect such resource. 
 5. Other useful resources will be listed in the Resource.md.
