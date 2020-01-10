@@ -1,9 +1,5 @@
 # encoding:utf-8
-"""
-@author: sugang
-@time: 2020/1/9 3:38 下午
-@desc: 
-"""
+
 import pandas as pd
 
 def get_continue_feature(data):

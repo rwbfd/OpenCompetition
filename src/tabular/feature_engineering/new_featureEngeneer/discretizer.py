@@ -5,7 +5,6 @@ import warnings
 from sklearn.preprocessing import KBinsDiscretizer
 from .utils import get_continue_feature
 
-
 class dis_configure:
     """
     The config object of discretizer. It saves the parameters of discretizer and check their validity.
