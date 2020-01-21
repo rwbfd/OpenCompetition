@@ -5,10 +5,11 @@ import os
 import torch
 from torch import nn
 from torch.nn import CrossEntropyLoss, MSELoss
-from .modeling_utils import PreTrainedModel, prune_linear_layer
+from src.common.pytorch.activation.activation import ACT2FN
 
 
 # TODO: What are these imports exactly?
+# TODO: Change the transformer part. This is really wrong.
 
 
 class TransformerConfig:
@@ -99,7 +100,7 @@ class TrasnformerSelfOutput(nn.Module):
     def __init__(self, config):
         super(TrasnformerSelfOutput, self).__init__()
         self.dense = nn.Linear(config.hidden_size, config.hidden_size)
-        self.LayerNorm = BertLayerNorm(config.hidden_size, eps=config.layer_norm_eps)
+        self.LayerNorm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
     def forward(self, hidden_states, input_tensor):
@@ -154,6 +155,7 @@ class TransforomerAttention(nn.Module):
         outputs = (attention_output,) + self_outputs[1:]  # add attentions if we output them
         return outputs
 
+
 class BertIntermediate(nn.Module):
     def __init__(self, config):
         super(BertIntermediate, self).__init__()
@@ -169,14 +171,11 @@ class BertIntermediate(nn.Module):
         return hidden_states
 
 
-BertLayerNorm = torch.nn.LayerNorm
-
-
 class BertOutput(nn.Module):
     def __init__(self, config):
         super(BertOutput, self).__init__()
         self.dense = nn.Linear(config.intermediate_size, config.hidden_size)
-        self.LayerNorm = BertLayerNorm(config.hidden_size, eps=config.layer_norm_eps)
+        self.LayerNorm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
     def forward(self, hidden_states, input_tensor):
