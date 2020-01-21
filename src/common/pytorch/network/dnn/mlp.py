@@ -1,20 +1,11 @@
-import logging
-import math
-import os
-
-import torch
-from torch import nn
-from src.common.layer.normalize_linear_layer import NormedLinearLayer
-
-import torch
 import torch.nn as nn
-from torch.nn import Parameter
-from torch.autograd import Variable
+from src.common.layer.normalize_linear_layer import NormedLinearLayer
+from src.common.normalization.pixel_norm import PixelNorm
 
 
 class MLPConfig:
     def __init__(self, neuron_list, use_norm=True, use_dropout=True, dropout_rate=0.05, type_norm='pixel_norm',
-                 type_linear='norm_linear', activation='mish'):
+                 type_linear='norm_linear', activation='mish', momentum=0.1):
         assert isinstance(neuron_list, list)
         self.use_norm = use_norm
         self.use_dropout = use_dropout
@@ -32,6 +23,7 @@ class MLPConfig:
         if activation not in {'relu', 'gelu', 'gelu_bert', 'mish'}:
             raise NotImplementedError
         self.activation = activation
+        self.momentum = momentum
 
 
 class MLP(nn.Module):
@@ -39,20 +31,28 @@ class MLP(nn.Module):
         super(MLP, self).__init__()
         self.mlp_config = mlp_config
         self.layers = list()
-        if self.mlp_config.type_lienar == 'linear':
-            for layer in range(len(self.mlp_config.neuron_list) - 1):
-                in_neuron = self.mlp_config.neuron_list[layer]
-                out_neuron = self.mlp_config.neuron_list[layer + 1]
-                self.layers.append(nn.Linear(in_neuron, out_neuron))
-        else:
-            pass  # TODO Finish this part
 
+        for layer in range(len(self.mlp_config.neuron_list) - 1):
+            in_neuron = self.mlp_config.neuron_list[layer]
+            out_neuron = self.mlp_config.neuron_list[layer + 1]
+            if self.mlp_config.type_linear == 'linear':
+                self.layers.append((nn.Linear(in_neuron, out_neuron)))
+            elif self.mlp_config.type_linear == 'norm_linear':
+                self.layers.append(NormedLinearLayer(in_neuron, out_neuron, mlp_config.momentum))
         self.normalization = None
         if self.mlp_config.type_norm == 'pixel_norm':
-            self.normalization =
+            self.normalization = PixelNorm()
         elif self.mlp_config.type_norm == 'batch_norm':
             self.normalization = nn.BatchNorm2d()
         self.dropout = None
+        if self.mlp_config.use_dropout and self.mlp_config.dropout_rate > 0:
+            self.dropout = nn.Dropout(self.self.mlp_config.dropout_rate)
 
     def forward(self, x):
-        pass
+        for layer in self.layers:
+            x = layer(x)
+            if self.mlp_config.normalization:
+                x = self.normalization(x)
+
+        x = self.dropout(x)
+        return x
