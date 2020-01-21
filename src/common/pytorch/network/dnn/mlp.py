@@ -32,27 +32,33 @@ class MLP(nn.Module):
         self.mlp_config = mlp_config
         self.layers = list()
 
-        for layer in range(len(self.mlp_config.neuron_list) - 1):
+        for layer in range(len(self.mlp_config.neuron_list) - 2):
             in_neuron = self.mlp_config.neuron_list[layer]
             out_neuron = self.mlp_config.neuron_list[layer + 1]
             if self.mlp_config.type_linear == 'linear':
                 self.layers.append((nn.Linear(in_neuron, out_neuron)))
             elif self.mlp_config.type_linear == 'norm_linear':
                 self.layers.append(NormedLinearLayer(in_neuron, out_neuron, mlp_config.momentum))
+        n_layer = len(self.mlp_config.neuron_list)
+        self.final_linear = nn.Linear(self.mlp_config.neuron_list[n_layer-2], self.mlp_config.neuron)
         self.normalization = None
         if self.mlp_config.type_norm == 'pixel_norm':
             self.normalization = PixelNorm()
         elif self.mlp_config.type_norm == 'batch_norm':
             self.normalization = nn.BatchNorm2d()
+
+
         self.dropout = None
         if self.mlp_config.use_dropout and self.mlp_config.dropout_rate > 0:
             self.dropout = nn.Dropout(self.self.mlp_config.dropout_rate)
 
+
     def forward(self, x):
-        for layer in self.layers:
-            x = layer(x)
-            if self.mlp_config.normalization:
+        for i, layer in enumerate(self.layers):
+            if self.mlp_config.normalization and i != len(self.layers) - 1:
+                x = layer(x)
                 x = self.normalization(x)
 
-        x = self.dropout(x)
+        if self.dropout:
+            x = self.dropout(x)
         return x

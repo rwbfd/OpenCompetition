@@ -96,7 +96,3 @@ class Lookahead(Optimizer):
                 for group in self.param_groups:
                     group.setdefault(name, default)
 
-
-def LookaheadAdam(params, alpha=0.5, k=6, *args, **kwargs):
-    adam = Adam(params, *args, **kwargs)
-    return Lookahead(adam, alpha, k)

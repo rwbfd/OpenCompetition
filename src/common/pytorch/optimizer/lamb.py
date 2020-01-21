@@ -8,8 +8,9 @@ import math
 import torch
 from torch.optim import Optimizer
 
-try: 
+try:
     from tensorboardX import SummaryWriter
+
 
     def log_lamb_rs(optimizer: Optimizer, event_writer: SummaryWriter, token_count: int):
         """Log a histogram of trust ratio scalars in across layers."""
@@ -23,8 +24,10 @@ try:
 
         for k, v in results.items():
             event_writer.add_histogram(f'lamb/{k}', torch.tensor(v), token_count)
-except ModuleNotFoundError as e: 
-    print("To use this log_lamb_rs, please run 'pip install tensorboardx'. Also you must have Tensorboard running to see results")
+except ModuleNotFoundError as e:
+    print(
+        "To use this log_lamb_rs, please run 'pip install tensorboardx'. Also you must have Tensorboard running to see results")
+
 
 class Lamb(Optimizer):
     r"""Implements Lamb algorithm.
@@ -45,7 +48,7 @@ class Lamb(Optimizer):
     """
 
     def __init__(self, params, lr=1e-3, betas=(0.9, 0.999), eps=1e-6,
-                 weight_decay=0, adam=False):
+                 weight_decay=0, adam=False, trust_ratio=1):
         if not 0.0 <= lr:
             raise ValueError("Invalid learning rate: {}".format(lr))
         if not 0.0 <= eps:
@@ -57,6 +60,7 @@ class Lamb(Optimizer):
         defaults = dict(lr=lr, betas=betas, eps=eps,
                         weight_decay=weight_decay)
         self.adam = adam
+        self.trust_ratio = trust_ratio
         super(Lamb, self).__init__(params, defaults)
 
     def step(self, closure=None):
@@ -102,7 +106,7 @@ class Lamb(Optimizer):
                 # bias_correction1 = 1 - beta1 ** state['step']
                 # bias_correction2 = 1 - beta2 ** state['step']
                 # Apply bias to lr to avoid broadcast.
-                step_size = group['lr'] # * math.sqrt(bias_correction2) / bias_correction1
+                step_size = group['lr']  # * math.sqrt(bias_correction2) / bias_correction1
 
                 weight_norm = p.data.pow(2).sum().sqrt().clamp(0, 10)
 
@@ -114,7 +118,7 @@ class Lamb(Optimizer):
                 if weight_norm == 0 or adam_norm == 0:
                     trust_ratio = 1
                 else:
-                    trust_ratio = weight_norm / adam_norm
+                    trust_ratio = self.trust_ratio * weight_norm / adam_norm
                 state['weight_norm'] = weight_norm
                 state['adam_norm'] = adam_norm
                 state['trust_ratio'] = trust_ratio
