@@ -50,7 +50,7 @@ class MLP(nn.Module):
         self.normalization = None
         if self.mlp_config.type_norm == 'pixel_norm':
             self.normalization =
-        elif self.mlp_config.type_norm == 'batch_norm'
+        elif self.mlp_config.type_norm == 'batch_norm':
             self.normalization = nn.BatchNorm2d()
         self.dropout = None
 
