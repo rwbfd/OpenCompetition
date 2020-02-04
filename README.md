@@ -1,42 +1,26 @@
-# Open Competition Tookkit
-A collection of algorithms for data science competition. We will only focus developing (and copying) the latest progress. 
+# OpenComptition Toolkit
+## Overview
 
-## Current Goals (Under Construction)
-### Tabular
-1. NN based methods
-2. Auto Tabular
+This is a collection of commonly used algorithms and tricks from data science compotitions, as well
+as ideas for researches. This repository covers algorithms for tabular data mining, NLP,
+CV and RL. 
 
-### NLP
-1. Classification. 
-2. Sequence Labeling
-3. Relationship Extraction
-4. Summarization
-5. AutoNLP
+## Prerequisite
+### Foundations
+The basic program is based on Anaconda 3.7.
 
-### CV
-1. Classification
-2. Object Detection
+### Deep Learning Framework
+This repository is currently based on two deep learning frameworks:
 
-### Reinforcement Learning
-1. V-trace 
-2. Improved MCTS
+1. TensorFlow 1.13.
+2. PyTorch 1.14.
 
-## Character
-1. Code related to algorithms are mostly writen in python and R. Performance critical ones are written in C++ (linked to Python using Cython).
-2. Code will be written in Tensorflow 1.13 and PyTorch. The reasons to involve two framework is that currently TPU only supports 1.13 and Pytorch.
-3. An example will be offered on how to deploy models using TensorflowServer, Kubernetes and Istio. 
-4. We encourage users to record their experience in the demo file. We will also actively collect such resource. 
-5. Other useful resources will be listed in the Resource.md.
-6. If needed, one can contact ran.wang.math@gmail.com for Google Cloud testing.
+The reason why we have not yet chosen the newer version of TensorFlow is because 
+it is not yet stable, especially in the sense that the API seems to have been undergoing 
+dramatic revisions. 
 
-## Now to Contribute
-1. Anyone can contribute. However, do not contribute codes that are meant to be kept private. 
-2. Please only English to communicate. 
-3. Every once for a while, a bounty will be put for the implementation of certain features. Please refer to the Bounty.md for information.
-4. If a feature is desirable, one can email ran.wang.math@gmail.com for the possibility of implementation. 
+### Dependencies
+There are a few dependencies for this library, this can be installed using the following command.
 
-## Other Useful Resources
-1. https://www.overleaf.com/read/bnnnnkffbhsw. Some tricks for data mining.
-2. 链接：https://pan.baidu.com/s/1dWlM9Z_92Y7zUzF_18pBrw 提取码：slpv. A huge collection of books and papers.
-
-
+1. Install AllenNLP toolkit by `pip install allennlp`.
+2. Install Huggingface Transformers by `pip install transformers`.
