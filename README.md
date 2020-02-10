@@ -1,42 +1,43 @@
-# Open Competition Tookkit
-A collection of algorithms for data science competition. We will only focus developing (and copying) the latest progress. 
+# The Open Competition Toolkit 
 
-## Current Goals (Under Construction)
+## Overview
+This is a library that collects the useful codes for data science competition, as well as some code for research purposes. 
+
+The library contains materials for Tabular Data Mining, NLP, CV and RL. 
+
+Most of the code are written in Python 3.7, except some part of Cython, C++ and R. We do, however, provide an unified interface for python.
+
+## Feature of The Library
+
+
+## Environment
+The following environment includes:
+1. Anaconda 3.7.
+2. PyTorch 1.4.
+3. TensorFlow 1.13.
+4. Other required packages (Need to be finished).
+
+
+## Available contents 
+### General
+
 ### Tabular
-1. NN based methods
-2. Auto Tabular
+1. Category Encoders (need to finish some details).
 
 ### NLP
-1. Classification. 
-2. Sequence Labeling
-3. Relationship Extraction
-4. Summarization
-5. AutoNLP
 
 ### CV
-1. Classification
-2. Object Detection
 
-### Reinforcement Learning
-1. V-trace 
-2. Improved MCTS
+### RL
 
-## Character
-1. Code related to algorithms are mostly writen in python and R. Performance critical ones are written in C++ (linked to Python using Cython).
-2. Code will be written in Tensorflow 1.13 and PyTorch. The reasons to involve two framework is that currently TPU only supports 1.13 and Pytorch.
-3. An example will be offered on how to deploy models using TensorflowServer, Kubernetes and Istio. 
-4. We encourage users to record their experience in the demo file. We will also actively collect such resource. 
-5. Other useful resources will be listed in the Resource.md.
-6. If needed, one can contact ran.wang.math@gmail.com for Google Cloud testing.
+## To Finish 
+### General
 
-## Now to Contribute
-1. Anyone can contribute. However, do not contribute codes that are meant to be kept private. 
-2. Please only English to communicate. 
-3. Every once for a while, a bounty will be put for the implementation of certain features. Please refer to the Bounty.md for information.
-4. If a feature is desirable, one can email ran.wang.math@gmail.com for the possibility of implementation. 
+### Tabular
 
-## Other Useful Resources
-1. https://www.overleaf.com/read/bnnnnkffbhsw. Some tricks for data mining.
-2. 链接：https://pan.baidu.com/s/1dWlM9Z_92Y7zUzF_18pBrw 提取码：slpv. A huge collection of books and papers.
+### NLP
 
+### CV
+
+### RL
 
