@@ -26,9 +26,7 @@ class feature_extraction:
         knn = KNeighborsClassifier(n_neighbors=3) #set neighbors to 3
         knn.fit(data_set,label_Wk)
         pred = knn.predict(data_set)
-        for i in range(data_set.shape[0]):
-            if pred[i] == label_Wk[i]:
-                K[0][i] = 1
+        #doing prob algorithm here
         return K
 
 
