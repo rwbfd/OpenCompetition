@@ -18,13 +18,17 @@ The following environment includes:
 2. PyTorch 1.4.
 3. TensorFlow 1.13.
 4. Other required packages (Need to be finished).
+5. DeepSpeed. We have forked this library in order to make further development, such as adding more optimizers.  
+6. NgBoost. Can be installed via `pip install --upgrade git+https://github.com/stanfordmlgroup/ngboost.git`
+7. XgBoost, LightGBM and CatBoost.
+8. GPLearn, a library for symbolic learning, can be 
+installed using `pip install gplearn`.
 
 
 ## Available contents 
 ### General
 
 ### Tabular
-1. Category Encoders (need to finish some details).
 
 ### NLP
 

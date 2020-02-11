@@ -22,7 +22,7 @@ sys.path.append(curr_path)
 __all__ = []
 
 # config
-BERT_PATH = "/home/ran_wang_math/ccf_data/pretrain_model/ernie1.0"
+BERT_PATH = "/home/ran_wang_math/ccf_data/pretrain_model/ernie1.0" # TODO Change this to a flag
 flags = tf.flags
 FLAGS = flags.FLAGS
 
