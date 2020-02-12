@@ -10,11 +10,12 @@ class DecisionTreeDiscretizer():
         self.n_bins = n_bins
 
     def fit_transform(self, X, y):
-        X_train, _, y_train, _ = train_test_split(X, y, test_size=0.2,shuffle=True)
+        X_train, _, y_train, _ = train_test_split(X, y, test_size=0.2, shuffle=True)
         clf = DecisionTreeClassifier(max_leaf_nodes=self.n_bins)
         clf.fit(X_train, y_train)
         pred = clf.predict(X)
         return pred
+
 
 def discretizer(df, configgers):
     """

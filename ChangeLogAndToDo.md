@@ -12,8 +12,11 @@ in TensorFlow. Therefore to implement this library it is only meant to start a f
 5. The PyTorch version of Ranger is implemented. 
 
 ### 2020.02.12
-1. Add a variable selector
-
+1. Add a variable selector.
+2. Finished key value pairs. High order group by.
+3. Added discretizer.
+4. Finished category encoder.
+5. Finished target mean encoder.
 
 ##TO-DO
 1. Need to start try to integrate DeepSpeed into the training frameworks by adding more optimizers.

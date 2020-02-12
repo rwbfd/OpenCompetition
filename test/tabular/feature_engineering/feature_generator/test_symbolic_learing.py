@@ -1,7 +1,7 @@
 import unittest
 from sklearn.datasets import load_boston
 import pandas as pd
-from src.tabular.feature_engineering.feature_generator.symbolic_learning import GPConfig,symbolicLearning
+from src.tabular.feature_engineering.feature_generator.symbolic_learning import GPConfig,get_feature_symbolic_learning
 
 
 class MyTestCase(unittest.TestCase):
@@ -10,7 +10,7 @@ class MyTestCase(unittest.TestCase):
         df = pd.DataFrame(d.data, columns=d.feature_names)
         df.loc[:, "target"] = d.target
         gpconfiger = GPConfig(["CRIM", "ZN"], "target")
-        res = symbolicLearning(df, gpconfiger)
+        res = get_feature_symbolic_learning(df, gpconfiger)
         print(res)
 
         self.assertEqual(True, False)

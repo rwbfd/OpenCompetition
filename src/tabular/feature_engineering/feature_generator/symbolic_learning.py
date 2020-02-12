@@ -19,7 +19,7 @@ class GPConfig:
         self.target_col = target_col
 
 
-def symbolicLearning(df, gp_config):
+def get_feature_symbolic_learning(df, gp_config):
     """
 
     Parameters
