@@ -23,6 +23,7 @@ The following environment includes:
 7. XgBoost, LightGBM and CatBoost.
 8. GPLearn, a library for symbolic learning, can be 
 installed using `pip install gplearn`.
+9. rpy2. Can be installed using `pip install rpy2`. Note that you have to have R installed.  
 
 
 ## Available contents 

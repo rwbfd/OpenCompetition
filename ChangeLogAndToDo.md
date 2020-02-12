@@ -17,6 +17,7 @@ in TensorFlow. Therefore to implement this library it is only meant to start a f
 3. Added discretizer.
 4. Finished category encoder.
 5. Finished target mean encoder.
+6. Started to work on MetaDes and Direct Policy Gradient update. 
 
 ##TO-DO
 1. Need to start try to integrate DeepSpeed into the training frameworks by adding more optimizers.
