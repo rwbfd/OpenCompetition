@@ -10,6 +10,11 @@ adding label smoothing, and many things. Note that some of the features will be 
 in TensorFlow. Therefore to implement this library it is only meant to start a feasible starting point.  
 4. Integrated Hugging face transformers. We will start to add similar functionalities. 
 5. The PyTorch version of Ranger is implemented. 
+
+### 2020.02.12
+1. Add a variable selector
+
+
 ##TO-DO
 1. Need to start try to integrate DeepSpeed into the training frameworks by adding more optimizers.
 2. For Tensorflow version, more models (some model will be coming very soon) need to be added.
