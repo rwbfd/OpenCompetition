@@ -73,9 +73,7 @@ class ModelTrainer(ABC):
         self.scheduler = scheduler
         return self
 
-
-
-    def train_and_eval(self, train_dataset, eval_data_set, args, prefix = "", **kwargs ):
+    def train_and_eval(self, train_dataset, eval_data_set, args, prefix="", **kwargs):
         self.local_rank = args.local_rank
         self.train_batch_size = args.train_batch_size
         self.per_gpu_train_batch_size = args.per_gpu_train_batch_size
@@ -235,7 +233,7 @@ class ModelTrainer(ABC):
         # Eval!
         logger.info("***** Running evaluation {} *****".format(prefix))
         logger.info("  Num examples = %d", len(eval_dataset))
-        logger.info("  Batch size = %d", selfeval_batch_size)
+        logger.info("  Batch size = %d", self.eval_batch_size)
         eval_loss = 0.0
         nb_eval_steps = 0
         preds = None

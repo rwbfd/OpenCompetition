@@ -23,7 +23,7 @@ in TensorFlow. Therefore to implement this library it is only meant to start a f
 1. Added Category Encoder
 2. Added Discretizer. 
 3. Added encoder for continuous variables. Needed to add icdf. 
-4. Added some 
+4. Added some dimension reduction techniques. 
 
 ##TO-DO
 1. Need to start try to integrate DeepSpeed into the training frameworks by adding more optimizers.
