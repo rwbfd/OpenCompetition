@@ -19,13 +19,6 @@ in TensorFlow. Therefore to implement this library it is only meant to start a f
 5. Finished target mean encoder.
 6. Started to work on MetaDes and Direct Policy Gradient update. 
 
-### 2020.02.13
-1. Added Category Encoder
-2. Added Discretizer. 
-3. Added encoder for continuous variables. Needed to add icdf. 
-4. Added some dimension reduction techniques. 
-5. Added some codes for general model training frameworks. Not yet finished. 
-
 ##TO-DO
 1. Need to start try to integrate DeepSpeed into the training frameworks by adding more optimizers.
 2. For Tensorflow version, more models (some model will be coming very soon) need to be added.

@@ -23,21 +23,20 @@ from metrics import get_metrics_ops, get_metrics
 curr_path = os.getcwd()
 sys.path.append(curr_path)
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
 __all__ = []
 
 # config
-BERT_PATH = "/home/ran_wang_math/ccf_data/pretrain_model/albert_base_zh"
 flags = tf.flags
 FLAGS = flags.FLAGS
-
+flags.DEFINE_string("BERT_PATH", None, None)
 flags.DEFINE_string("train_data_dir", os.path.join(curr_path, "data", "ccf_data_zr_deal", "train_1.csv"), None)
 flags.DEFINE_string("test_data_dir", os.path.join(curr_path, "data", "ccf_data_zr_deal", "dev_1.csv"), None)
 flags.DEFINE_string("dev_data_dir", os.path.join(curr_path, "data", "ccf_data_zr_deal", "dev_1.csv"), None)
 flags.DEFINE_string("model_dir", None, None)
 flags.DEFINE_bool("eval_all_ckpt", True, None)
 
+BERT_PATH = FLAGS.BERT_PATh
 # data repeat
 flags.DEFINE_integer("data_repeat", None, None)
 
@@ -89,197 +88,6 @@ tf.flags.DEFINE_string("tpu_zone", "us-central1-b", None)
 tf.flags.DEFINE_string("gcp_project", None, None)
 tf.flags.DEFINE_string("master", None, None)
 flags.DEFINE_integer("num_tpu_cores", 8, None)
-
-
-# define class
-class InputExample(object):
-    def __init__(self, guid, text_a, text_b=None, label=None):
-        self.guid = guid
-        self.text_a = text_a
-        self.text_b = text_b
-        self.label = label
-
-
-class PaddingInputExample(object):
-    """Fake example so the num input examples is a multiple of the batch size.
-    When running eval/predict on the TPU, we need to pad the number of examples
-    to be a multiple of the batch size, because the TPU requires a fixed batch
-    size. The alternative is to drop the last batch, which is bad because it means
-    the entire output data won't be generated.
-    We use this class instead of `None` because treating `None` as padding
-    battches could cause silent errors.
-    """
-
-
-class InputFeatures(object):
-    def __init__(self,
-                 input_ids,
-                 input_mask,
-                 segment_ids,
-                 label_id,
-                 is_real_example=True):
-        self.input_ids = input_ids
-        self.input_mask = input_mask
-        self.segment_ids = segment_ids
-        self.label_id = label_id
-        self.is_real_example = is_real_example
-
-
-class DataProcessor(object):
-    """Base class for data converters for sequence classification data sets."""
-
-    def get_train_examples(self, data_dir):
-        """Gets a collection of `InputExample`s for the train set."""
-        raise NotImplementedError()
-
-    def get_dev_examples(self, data_dir):
-        """Gets a collection of `InputExample`s for the dev set."""
-        raise NotImplementedError()
-
-    def get_test_examples(self, data_dir):
-        """Gets a collection of `InputExample`s for prediction."""
-        raise NotImplementedError()
-
-    def get_labels(self):
-        """Gets the list of labels for this data set."""
-        raise NotImplementedError()
-
-    @classmethod
-    def _read_tsv(cls, input_file, quotechar=None):
-        """Reads a tab separated value file."""
-        with tf.gfile.Open(input_file, "r") as f:
-            reader = csv.reader(f, delimiter=",", quotechar=quotechar)
-            lines = []
-            for line in reader:
-                lines.append(line)
-            return lines
-
-
-class ccfProcessor(DataProcessor):
-    def get_train_examples(self, data_dir):
-        """See base class."""
-        lines = self._read_tsv(os.path.join(curr_path, data_dir))
-        examples = []
-        for (i, line) in enumerate(lines):
-            if i == 0:
-                continue
-            guid = "train-%d" % (i)
-            text_a = tokenization.convert_to_unicode(line[2])
-            text_b = tokenization.convert_to_unicode(line[3])
-            label = tokenization.convert_to_unicode(line[1])
-            examples.append(
-                InputExample(
-                    guid=guid,
-                    text_a=text_a,
-                    text_b=text_b,
-                    label=label))
-        return examples
-
-    def get_dev_examples(self, data_dir):
-        """See base class."""
-        lines = self._read_tsv(os.path.join(curr_path, data_dir))
-        examples = []
-        for (i, line) in enumerate(lines):
-            if i == 0:
-                continue
-            guid = "dev-%d" % (i)
-            text_a = tokenization.convert_to_unicode(line[2])
-            text_b = tokenization.convert_to_unicode(line[3])
-            label = tokenization.convert_to_unicode(line[1])
-            examples.append(
-                InputExample(
-                    guid=guid,
-                    text_a=text_a,
-                    text_b=text_b,
-                    label=label))
-        return examples
-
-    def get_test_examples(self, data_dir):
-        """See base class."""
-        lines = self._read_tsv(os.path.join(curr_path, data_dir))
-        examples = []
-        for (i, line) in enumerate(lines):
-            if i == 0:
-                continue
-            guid = "dev-%d" % (i)
-            text_a = tokenization.convert_to_unicode(line[1])
-            text_b = tokenization.convert_to_unicode(line[2])
-            label = tokenization.convert_to_unicode("0")
-            examples.append(
-                InputExample(
-                    guid=guid,
-                    text_a=text_a,
-                    text_b=text_b,
-                    label=label))
-        return examples
-
-    def get_labels(self):
-        """See base class."""
-        return ["0", "1", "2"]
-
-
-class ccfKeyProcessor(DataProcessor):
-    def get_train_examples(self, data_dir):
-        """See base class."""
-        lines = self._read_tsv(os.path.join(curr_path, data_dir))
-        examples = []
-        for (i, line) in enumerate(lines):
-            if i == 0:
-                continue
-            guid = "train-%d" % (i)
-            text_a = tokenization.convert_to_unicode(line[2])
-            text_b = tokenization.convert_to_unicode(line[3])
-            label = tokenization.convert_to_unicode(line[1])
-            examples.append(
-                InputExample(
-                    guid=guid,
-                    text_a=text_a,
-                    text_b=text_b,
-                    label=label))
-        return examples
-
-    def get_dev_examples(self, data_dir):
-        """See base class."""
-        lines = self._read_tsv(os.path.join(curr_path, data_dir))
-        examples = []
-        for (i, line) in enumerate(lines):
-            if i == 0:
-                continue
-            guid = "dev-%d" % (i)
-            text_a = tokenization.convert_to_unicode(line[2])
-            text_b = tokenization.convert_to_unicode(line[3])
-            label = tokenization.convert_to_unicode(line[1])
-            examples.append(
-                InputExample(
-                    guid=guid,
-                    text_a=text_a,
-                    text_b=text_b,
-                    label=label))
-        return examples
-
-    def get_test_examples(self, data_dir):
-        """See base class."""
-        lines = self._read_tsv(os.path.join(curr_path, data_dir))
-        examples = []
-        for (i, line) in enumerate(lines):
-            if i == 0:
-                continue
-            guid = "dev-%d" % (i)
-            text_a = tokenization.convert_to_unicode(line[2])
-            text_b = tokenization.convert_to_unicode(line[3])
-            label = tokenization.convert_to_unicode("0")
-            examples.append(
-                InputExample(
-                    guid=guid,
-                    text_a=text_a,
-                    text_b=text_b,
-                    label=label))
-        return examples
-
-    def get_labels(self):
-        """See base class."""
-        return ["0", "1", "2"]
-
 
 # define function
 def convert_single_example(ex_index, example, label_list, max_seq_length,
@@ -682,18 +490,6 @@ def model_fn_builder(bert_config, num_labels, init_checkpoint, learning_rate,
             if FLAGS.data_repeat:
                 raw_shape = [-1, FLAGS.data_repeat, probabilities.shape[-1].value]
                 probabilities = tf.reduce_mean(tf.reshape(probabilities, shape=raw_shape), -2)
-
-            # predictions = tf.argmax(probabilities, -1)
-            # todo 不太清楚为什么如果在这个地方返回 accuracy 就会报错
-            # accuracy = tf.metrics.accuracy(
-            #     labels=label_ids,
-            #     predictions=predictions,
-            #     weights=is_real_example)
-            #
-            # output_spec = tf.contrib.tpu.TPUEstimatorSpec(
-            #     mode=mode,
-            #     predictions={"probabilities": probabilities, "accuracy": accuracy},
-            #     scaffold_fn=scaffold_fn)
 
             output_spec = tf.contrib.tpu.TPUEstimatorSpec(
                 mode=mode,

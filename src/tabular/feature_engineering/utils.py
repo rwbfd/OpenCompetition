@@ -112,33 +112,3 @@ def get_train_data(X, y):
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=True)
     return X_train, y_train
-
-
-def set_default_vale(filed, configger, default_value, is_bool=False):
-    """
-        the function is perform the params value setting, if the set_value is None or '' then will retrun default_value
-
-    :param configger: the configger object
-    :param filed: the filed name of param
-    :param default_value: the default value for function
-    :param is_bool: whether the param need bool
-    :return:
-    """
-
-    try:
-        set_value = configger[filed]
-        assert set_value is None or set_value == ''
-        if is_bool:
-            if is_bool:
-                if set_value.title() == "True" or int(set_value) == 1:
-                    set_value = True
-                elif set_value.title() == "True" or int(set_value) == 0:
-                    set_value = False
-                else:
-                    raise ValueError
-        final_value = set_value
-
-    except(AssertionError, KeyError, ValueError):
-        final_value = default_value
-
-    return final_value
