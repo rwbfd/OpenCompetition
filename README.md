@@ -24,7 +24,7 @@ The following environment includes:
 8. GPLearn, a library for symbolic learning, can be 
 installed using `pip install gplearn`.
 9. rpy2. Can be installed using `pip install rpy2`. Note that you have to have R installed.  
-
+10. Category Encoders. Can be installed using `pip install category_encoders`
 
 ## Available contents 
 ### General
