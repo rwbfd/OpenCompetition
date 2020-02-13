@@ -1,6 +1,7 @@
 import numpy as np
 import json
 from sklearn.preprocessing import MinMaxScaler, MaxAbsScaler, Normalizer, RobustScaler, PowerTransformer
+from src.tabular.feature_engineering.utils import set_default_vale
 from scipy.special import erfinv
 from scipy.stats import kstest, norm
 
@@ -84,12 +85,7 @@ def encode_continuous_variable(df, configgers):
 
         if distribution_type == "uniform":
             if method == "MinMax":
-                try:
-                    feature_range = configgers[encode_col]["feature_range"]
-                    assert feature_range is not None
-                except (AttributeError, AssertionError):
-                    feature_range = (0, 1)
-
+                feature_range = set_default_vale("feature_range", configgers[encode_col], (0, 1))
                 res = MinMaxScaler(feature_range=feature_range).fit_transform(df[[encode_col]])
 
             elif method == "MinAbs":
@@ -97,22 +93,15 @@ def encode_continuous_variable(df, configgers):
 
             elif method == "Normalize":
 
-                try:
-                    norm_method = configgers[encode_col]["norm_method"]
-                    assert norm_method is not None
-                except (AttributeError, AssertionError):
-                    norm_method = "l2"
-
+                norm_method = set_default_vale("norm_method", configgers[encode_col], "l2")
                 res = Normalizer(norm=norm_method).fit_transform(df[[encode_col]])
 
             elif method == "Robust":
+                quantile = set_default_vale("quantile", configgers[encode_col], (25.0, 75.0))
 
-                try:
-                    quantile = configgers[encode_col]["quantile"]
-                    assert quantile is not None
+                if quantile is not None and list(quantile) != [25.0, 75.0]:
                     with_scaling = False
-                except (AttributeError, AssertionError):
-                    quantile = (25.0, 75.0)
+                else:
                     with_scaling = True
 
                 res = RobustScaler(with_centering=True, with_scaling=with_scaling,
@@ -126,23 +115,11 @@ def encode_continuous_variable(df, configgers):
 
         elif distribution_type == "norm":
             if method == "BoxCox":
-                try:
-                    standardize = configgers[encode_col]["standardize"]
-                    assert standardize is not None
-                    standardize = bool(int(standardize))
-                except (AttributeError, AssertionError):
-                    standardize = True
-
+                standardize = set_default_vale("standardize", configgers[encode_col], True, is_bool=True)
                 res = PowerTransformer(method="box-cox", standardize=standardize).fit_transform(df[[encode_col]])
 
             elif method == "Yeo-Johnson":
-                try:
-                    standardize = configgers[encode_col]["standardize"]
-                    assert standardize is not None
-                    standardize = bool(int(standardize))
-                except (AttributeError, AssertionError):
-                    standardize = True
-
+                standardize = set_default_vale("standardize", configgers[encode_col], True, is_bool=True)
                 res = PowerTransformer(method="yeo-johnson", standardize=standardize).fit_transform(df[[encode_col]])
 
             elif method == "RankGuass":
@@ -155,8 +132,8 @@ def encode_continuous_variable(df, configgers):
 
         else:
             if method == "ICDF":
-                #TODO add ICDF
-                pass
+                res = norm.ppf(df[[encode_col]])
+
             else:
                 raise ValueError(
                     """The column '{}' maybe is others distribution. So, the method value must be in ["BoxCox", "Yeo-Johnson", "Normalize"]""".format(

@@ -3,6 +3,7 @@
 import pandas as pd
 import numpy as np
 from src.tabular.feature_engineering.utils import retrun_df_list
+from src.tabular.feature_engineering.utils import set_default_vale
 
 
 def add_noise(series, noise_level):
@@ -46,29 +47,39 @@ def encoder(trn_series=None,
     return add_noise(ft_trn_series, noise_level)
 
 
-def target_encode(df_list, index_col, config_tuple):
+def target_encode(df_list, configger):
     """
 
-    Parameters
-    ----------
-    df_list : object, the pd.DataFrame after KFlod split.
-    index_col : str ,the index col of df_list's DataFrame
-    config_tuple : collections.namedtuple like namedtuple("nt" , ["var_list","target_col","min_samples_leaf","smoothing","noise_level"])
-
-    Returns
-    -------
-    df_list_t : object ,the pd.DataFrame after transform, the result of column named after_encode
+    :param df_list: the training dataset with 5 flod.
+    :param configger: the json str of config setting
+    :return:
     """
+    import json
+    configger = json.loads(configger)
+
     data = pd.concat(df_list, axis=1)
+    var_list = configger["configger"]
+    target_col = configger["target_col"]
+    index_col = configger["index_col"]
 
-    X = data[config_tuple.var_list]
-    y = data[config_tuple.target_col]
-    data.loc[:, "after_encode"] = encoder(trn_series=X,
+    y = data[target_col]
+    if var_list is None:
+        X = data[var_list]
+    else:
+        X = data.drop([target_col], axis=1)
+
+
+    min_samples_leaf = set_default_vale("min_samples_leaf",configger,1)
+    smoothing = set_default_vale("smoothing",configger,1)
+    noise_level = set_default_vale("noise_level",configger,0)
+    data.loc[:, "target_encode"] = encoder(trn_series=X,
                                           target=y,
-                                          min_samples_leaf=config_tuple.min_samples_leaf,
-                                          smoothing=config_tuple.smoothing,
-                                          noise_level=config_tuple.noise_level)
+                                          min_samples_leaf=min_samples_leaf,
+                                          smoothing=smoothing,
+                                          noise_level=noise_level)
 
-    df_list_t = retrun_df_list(df_list, data[[index_col, "after_encode"]], index_col)
+    df_list_t = []
+    for df in df_list:
+        df_list_t.append(df.merge(data[[index_col,"target_encode"]],on=index_col))
 
     return df_list_t
