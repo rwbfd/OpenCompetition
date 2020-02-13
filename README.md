@@ -20,25 +20,4 @@ The following environment includes:
 4. R. 
 5. Other dependencies can be installed using the install_dependency.sh script
 
-## Available contents 
-### General
-
-### Tabular
-
-### NLP
-
-### CV
-
-### RL
-
-## To Finish 
-### General
-
-### Tabular
-
-### NLP
-
-### CV
-
-### RL
 
