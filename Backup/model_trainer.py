@@ -298,3 +298,46 @@ class ModelTrainer(ABC):
                 self.model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True,
             )
         return t_total
+
+    def train_and_evaluate(self, train_data_set, eval_data_set, args, prefix = '', **kwargs):
+        global_step, tr_loss = self.train_and_eval(train_data_set, eval_data_set, self.model, args, prefix, **kwargs)
+        logger.info(" global_step = %s, average loss = %s", global_step, tr_loss)
+
+        if  (self.local_rank == -1 or torch.distributed.get_rank() == 0):
+            # Create output directory if needed
+            if not os.path.exists(args.output_dir) and args.local_rank in [-1, 0]:
+                os.makedirs(args.output_dir)
+
+            logger.info("Saving model checkpoint to %s", args.output_dir)
+            # Save a trained model, configuration and tokenizer using `save_pretrained()`.
+            # They can then be reloaded using `from_pretrained()`
+            model_to_save = (
+                self.model.module if hasattr(self.model, "module") else self.model
+            )  # Take care of distributed/parallel training
+            self.model.save(**kwargs)
+
+            torch.save(args, os.path.join(args.output_dir, "training_args.bin"))
+            self.model.to(args.device)
+
+            # Evaluation
+        results = {}
+        if args.do_eval and args.local_rank in [-1, 0]:
+            checkpoints = [args.output_dir]
+            if args.eval_all_checkpoints:
+                checkpoints = list(
+                    os.path.dirname(c) for c in
+                    sorted(glob.glob(args.output_dir + "/**/" + WEIGHTS_NAME, recursive=True))
+                )
+                logging.getLogger("transformers.modeling_utils").setLevel(logging.WARN)  # Reduce logging
+            logger.info("Evaluate the following checkpoints: %s", checkpoints)
+            for checkpoint in checkpoints:
+                global_step = checkpoint.split("-")[-1] if len(checkpoints) > 1 else ""
+                prefix = checkpoint.split("/")[-1] if checkpoint.find("checkpoint") != -1 else ""
+
+                model = self.model.from_pretrained(checkpoint)
+                model.to(args.device)
+                result = self.evaluate(args, self.model,prefix=prefix, **kwargs)
+                result = dict((k + "_{}".format(global_step), v) for k, v in result.items())
+                results.update(result)
+
+        return results

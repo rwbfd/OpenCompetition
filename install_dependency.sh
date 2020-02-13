@@ -7,4 +7,5 @@ pip install rpy2
 pip install catboost
 pip install xgboost
 pip install lightgbm
-pip install category_encoders
+pip install category_encoderso
+pip install tensorboardX
