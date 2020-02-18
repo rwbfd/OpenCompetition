@@ -1,0 +1,9 @@
+1. ZetNet
+2. Inception-V3
+3. DelugeNet
+4. FractaNet
+5. ResNexT
+6. pyramidaNet
+7. Concurrent Squeeze
+8. Channel Boosted CNN
+9. Competitive Squeeze & Excitation Network CMPE-SE-WRN-28
