@@ -9,7 +9,7 @@ from torch.autograd import Variable
 import os,sys,random,time
 import argparse
 
-from focalloss import *
+from focal_loss import *
 
 
 start_time = time.time()
