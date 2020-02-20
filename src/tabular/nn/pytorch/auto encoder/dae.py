@@ -1,0 +1,227 @@
+
+from AutoEncoder import utils
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.autograd import Variable
+
+from ae.utils import log_likelihood_samples_mean_sigma, prior_z, log_mean_exp
+
+class DVAE(nn.Module):
+    def __init__(self,args):
+        super(DVAE, self).__init__()
+        # parameters
+        self.epoch = args.epoch
+        self.batch_size = args.batch_size
+        self.save_dir = args.save_dir
+        self.result_dir = args.result_dir
+        self.dataset = args.dataset
+        self.log_dir = args.log_dir
+        self.gpu_mode = args.gpu_mode
+        self.model_name = args.model_type
+        self.z_dim = args.z_dim
+        self.arch_type = args.arch_type
+        self.num_sam = args.num_sam
+        # networks init
+        self.encoder_init()
+        self.decoder_init()
+
+        if self.gpu_mode:
+            self.reconstruction_function = nn.BCELoss().cuda()
+        else:
+            self.reconstruction_function = nn.BCELoss()
+
+        self.reconstruction_function.size_average = False
+
+        # fixed noise
+        if self.gpu_mode:
+            self.sample_z_ = Variable(torch.randn((self.batch_size, 1, self.z_dim)).cuda(), volatile=True)
+        else:
+            self.sample_z_ = Variable(torch.randn((self.batch_size, 1, self.z_dim)), volatile=True)
+
+    def log_likelihood_estimate(self, recon_x, x, Z, mu, logsig):
+
+        N, C, iw, ih = x.shape
+        x_tile = x.repeat(self.num_sam, 1, 1, 1, 1).permute(1, 0, 2, 3, 4)
+
+        bce = x_tile * torch.log(recon_x) + (1. - x_tile) * torch.log(1 - recon_x)
+        log_p_x_z = torch.sum(torch.sum(torch.sum(bce, dim=4), dim=3), dim=2)
+
+        log_q_z_x = log_likelihood_samples_mean_sigma(Z, mu, logsig, dim=2)
+        log_p_z = prior_z(Z, dim=2)
+        log_ws = log_p_x_z - log_q_z_x + log_p_z
+        return -torch.mean(torch.squeeze(log_mean_exp(log_ws, dim=1)), dim=0)
+
+    def elbo(self, recon_x, x, mu, logsig):
+
+        N, M, C, iw, ih = recon_x.shape
+        x = x.contiguous().view([N * M, C, iw, ih])
+        recon_x = recon_x.view([N * M, C, iw, ih])
+        BCE = self.reconstruction_function(recon_x, x) / (N * M)
+        KLD_element = (logsig - mu ** 2 - torch.exp(logsig) + 1)
+        KLD = - torch.mean(torch.sum(KLD_element * 0.5, dim=2))
+        return BCE + KLD
+
+    def loss_function(self, recon_x, x, mu, logsig):
+
+        N, C, iw, ih = x.shape
+        x_tile = x.repeat(self.num_sam, 1, 1, 1, 1).permute(1, 0, 2, 3, 4)
+        J_low = self.elbo(recon_x, x_tile, mu, logsig)
+        return J_low
+
+    def decoder_init(self,net):
+        # Architecture : FC1024_BR-FC7x7x128_BR-(64)4dc2s_BR-(1)4dc2s_S
+        # self.input_height = 28
+        # self.input_width = 28
+        # self.output_dim = 1
+        #
+        # if self.arch_type == 'conv':
+        #     self.dec_layer1 = nn.Sequential(
+        #         nn.Linear(self.z_dim, 128 * (self.input_height // 4) * (self.input_width // 4)),
+        #         nn.BatchNorm1d(128 * (self.input_height // 4) * (self.input_width // 4)),
+        #         nn.ReLU(),
+        #     )
+        #
+        #     self.dec_layer2 = nn.Sequential(
+        #         nn.ConvTranspose2d(128, 64, 4, 2, 1),
+        #         nn.BatchNorm2d(64),
+        #         nn.ReLU(),
+        #         nn.ConvTranspose2d(64, self.output_dim, 4, 2, 1),
+        #         nn.Sigmoid(),
+        #     )
+        # else:
+        #
+        #     self.dec_layer1 = nn.Sequential(
+        #         nn.Linear(self.z_dim, self.z_dim * 4),
+        #         nn.BatchNorm1d(self.z_dim * 4),
+        #         nn.LeakyReLU(0.2),
+        #         nn.Linear(self.z_dim * 4, self.z_dim * 4),
+        #         nn.BatchNorm1d(self.z_dim * 4),
+        #         # nn.LeakyReLU(0.2),
+        #         nn.Tanh(),
+        #     )
+        #
+        #     self.dec_layer2 = nn.Sequential(
+        #         nn.Linear(self.z_dim * 4, self.input_height * self.input_width),
+        #         nn.Sigmoid(),
+        #     )
+        self.dec_layer1 = net()
+        self.dec_layer2 = net()
+
+        utils.initialize_weights(self)
+
+    def encoder_init(self,net):
+        # Architecture : (64)4c2s-(128)4c2s_BL-FC1024_BL-FC1_S
+        # self.input_height = 28
+        # self.input_width = 28
+        # self.input_dim = 1
+        #
+        # if self.arch_type == 'conv':
+        #     self.enc_layer1 = nn.Sequential(
+        #         nn.Conv2d(self.input_dim, 64, 4, 2, 1),
+        #         nn.LeakyReLU(0.2),
+        #         nn.Conv2d(64, 128, 4, 2, 1),
+        #         nn.BatchNorm2d(128),
+        #         nn.LeakyReLU(0.2),
+        #     )
+        #     self.mu_fc = nn.Sequential(
+        #         nn.Linear(128 * (self.input_height // 4) * (self.input_width // 4), self.z_dim),
+        #     )
+        #
+        #     self.sigma_fc = nn.Sequential(
+        #         nn.Linear(128 * (self.input_height // 4) * (self.input_width // 4), self.z_dim),
+        #     )
+        # else:
+        #
+        #     self.enc_layer1 = nn.Sequential(
+        #         nn.Linear(self.input_height * self.input_width, self.z_dim * 4),
+        #         nn.BatchNorm1d(self.z_dim * 4),
+        #         nn.LeakyReLU(0.2),
+        #         nn.Linear(self.z_dim * 4, self.z_dim * 4),
+        #         nn.BatchNorm1d(self.z_dim * 4),
+        #         nn.LeakyReLU(0.2),
+        #     )
+        #
+        #     self.mu_fc = nn.Sequential(
+        #         nn.Linear(self.z_dim * 4, self.z_dim),
+        #     )
+        #
+        #     self.sigma_fc = nn.Sequential(
+        #         nn.Linear(self.z_dim * 4, self.z_dim),
+        #     )
+        self.enc_layer1 = net()
+        self.mu_fc = net()
+        self.sigma_fc = net()
+
+        utils.initialize_weights(self)
+
+    def encode(self, x):
+
+        if self.arch_type == 'conv':
+            x = self.enc_layer1(x)
+            #x = x.view(-1, 128 * (self.input_height // 4) * (self.input_width // 4))
+        else:
+            #x = x.view([-1, self.input_height * self.input_width * self.input_dim])
+            x = self.enc_layer1(x)
+        mean = self.mu_fc(x)
+        sigma = self.sigma_fc(x)
+
+        return mean, sigma
+
+    def sample(self, mu, logsig):
+        # std = logsig.mul(0.5).exp_()
+        std = torch.exp(logsig * 0.5)
+        if self.gpu_mode:
+            eps = torch.randn(std.size()).cuda()
+        else:
+            eps = torch.randn(std.size())
+        eps = Variable(eps)
+        return eps.mul(std).add_(mu)
+
+    def get_latent_sample(self, x):
+
+        mu, logsig = self.encode(x)
+        z = self.sample(mu, logsig)
+        return z
+
+    def decode(self, z):
+
+        N, T, D = z.size()
+        x = self.dec_layer1(z.view([-1, D]))
+
+        if self.arch_type == 'conv':
+            #x = x.view(-1, 128, (self.input_height // 4), (self.input_width // 4))
+            x = self.dec_layer2(x)
+        else:
+            x = self.dec_layer2(x)
+            #x = x.view(-1, 1, self.input_height, self.input_width)
+        return x.view([N, T, -1, self.input_width, self.input_height])
+
+    def forward(self, x, testF=False):
+
+        if self.model_name == 'DVAE' and not testF:
+            if self.gpu_mode:
+                eps = torch.randn(x.size()).cuda() * 0.025
+            else:
+                eps = torch.randn(x.size()) * 0.025
+            eps = Variable(eps)  # requires_grad=False
+            x = x.add_(eps)
+            # tmp = Distribution.Binomial(x, torch.Tensor(1-std))
+
+        mu, logsig = self.encode(x)
+        mu = mu.repeat(self.num_sam, 1, 1).permute(1, 0, 2)
+        logsig = logsig.repeat(self.num_sam, 1, 1).permute(1, 0, 2)
+
+        z = self.sample(mu, logsig)
+        res = self.decode(z)
+        return res, mu, logsig, z
+
+
+def loss_function(recon_x, x, mu, logvar):
+    reconstruction_function = nn.MSELoss(reduction='sum')
+    MSE = reconstruction_function(recon_x, x)
+    # loss = 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
+    KLD_element = mu.pow(2).add_(logvar.exp()).mul_(-1).add_(1).add_(logvar)
+    KLD = torch.sum(KLD_element).mul_(-0.5)
+    # KL divergence
+    return MSE + KLD
