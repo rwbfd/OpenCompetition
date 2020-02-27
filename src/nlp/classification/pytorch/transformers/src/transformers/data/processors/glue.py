@@ -19,7 +19,7 @@ import logging
 import os
 
 from ...file_utils import is_tf_available
-from .utils import DataProcessor, InputExample, InputFeatures
+from .utils import DataProcessor, InputExample, InputFeatures, InputExample_2
 
 
 if is_tf_available():
@@ -39,6 +39,7 @@ def glue_convert_examples_to_features(
     pad_token=0,
     pad_token_segment_id=0,
     mask_padding_with_zero=True,
+    noisy=None
 ):
     """
     Loads a data file into a list of ``InputFeatures``
@@ -133,7 +134,7 @@ def glue_convert_examples_to_features(
 
         features.append(
             InputFeatures(
-                input_ids=input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids, label=label
+                input_ids=input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids, label=label, noisy=noisy
             )
         )
 
@@ -164,6 +165,42 @@ def glue_convert_examples_to_features(
         )
 
     return features
+
+class OverallProcessor(DataProcessor):
+    """Processor for the Overall data set (GLUE version)."""
+
+    def get_train_examples(self, data_dir):
+        """See base class."""
+        logger.info("LOOKING AT {}".format(os.path.join(data_dir, "train.tsv")))
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "train.tsv")), "train")
+
+    def get_dev_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")
+
+    def get_labels(self):
+        """See base class."""
+        return ["0", "1"]
+
+    def _create_examples(self, lines, set_type):
+        """Creates examples for the training and dev sets."""
+        examples = []
+        if set_type is "MRPC":
+            for (i, line) in enumerate(lines):
+                if i == 0:
+                    continue
+                # guid = "%s-%s" % (set_type, i)
+                guid = line[0]
+                label = line[1]
+                text_a = line[2]
+                if line[3] is not None:
+                    text_b = line[3]
+                else
+                    text_b = None
+                if line[4] is not None:
+                    noisy = line[4]
+                examples.append(InputExample_2(guid=guid, label=label, text_a=text_a,text_b=text_b, noisy=noisy))
+
 
 
 class MrpcProcessor(DataProcessor):
