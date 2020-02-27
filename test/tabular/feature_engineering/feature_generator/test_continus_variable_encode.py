@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 import pandas as pd
 from collections import namedtuple
-from src.tabular.feature_engineering.feature_generator.encoding_continus_variable import encode_continuous_variable
+from src.tabular.feature_engineering.feature_generator.encoding_continuous_variable import encode_continuous_variable
 
 
 class continus_variable_encode_tester(unittest.TestCase):
