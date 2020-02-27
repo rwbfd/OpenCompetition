@@ -188,65 +188,14 @@ class OverallProcessor(DataProcessor):
             for (i, line) in enumerate(lines):
                 if i == 0:
                     continue
-                guid = "%s-%s" % (set_type, i)
-                text_a = line[3]
-                label = line[0]
-                text_b = line[4]
-                examples.append(InputExample(guid=guid, label=label, text_a=text_a, text_b=text_b))
-        elif set_type is "MultiNLI":
-            for (i, line) in enumerate(lines):
-                if i == 0:
-                    continue
-                guid = "%s-%s" % (set_type, line[0])
-                text_a = line[8]
-                text_b = line[9]
-                label = line[-1]
-                examples.append(InputExample(guid=guid, label=label, text_a=text_a,text_b=text_b))
-        elif set_type is "Cola":
-            for (i, line) in enumerate(lines):
-                guid = "%s-%s" % (set_type, i)
-                text_a = line[3]
+                # guid = "%s-%s" % (set_type, i)
+                guid = line[0]
                 label = line[1]
-                examples.append(InputExample(guid=guid, label=label, text_a=text_a,text_b=None))
-        elif set_type is "SST-2":
-            for (i, line) in enumerate(lines):
-                if i == 0:
-                    continue
-                guid = "%s-%s" % (set_type, i)
-                text_a = line[0]
-                label = line[1]
-                examples.append(InputExample(guid=guid, label=label, text_a=text_a,text_b=None))
-        elif set_type is "STS-B":
-            for (i, line) in enumerate(lines):
-                if i == 0:
-                    continue
-                guid = "%s-%s" % (set_type, line[0])
-                text_a = line[7]
-                text_b = line[8]
-                label = line[-1]
-                examples.append(InputExample(guid=guid, label=label, text_a=text_a,text_b=text_b))
-        elif set_type is "QQP":
-            for (i, line) in enumerate(lines):
-                if i == 0:
-                    continue
-                guid = "%s-%s" % (set_type, line[0])
-                try:
-                    text_a = line[3]
-                    text_b = line[4]
-                    label = line[5]
-                except IndexError:
-                    continue
-                examples.append(InputExample(guid=guid, label=label,text_a=text_a,text_b=text_b))
-        elif set_type is "QNLI" or "RTE" or "WNLI":
-            for (i, line) in enumerate(lines):
-                if i == 0:
-                    continue
-                guid = "%s-%s" % (set_type, line[0])
-                text_a = line[1]
-                text_b = line[2]
-                label = line[-1]
-                examples.append(InputExample(guid=guid, label=label, text_a=text_a,text_b=text_b))
-        return examples
+                text = line[2]
+                if text[3] is not None:
+                    noisy = text[3]
+                examples.append(InputExample(guid=guid, label=label, text=text, noisy))
+
 
 
 class MrpcProcessor(DataProcessor):
