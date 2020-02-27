@@ -19,7 +19,7 @@ import logging
 import os
 
 from ...file_utils import is_tf_available
-from .utils import DataProcessor, InputExample, InputFeatures
+from .utils import DataProcessor, InputExample, InputFeatures, InputExample_2
 
 
 if is_tf_available():
@@ -39,6 +39,7 @@ def glue_convert_examples_to_features(
     pad_token=0,
     pad_token_segment_id=0,
     mask_padding_with_zero=True,
+    noisy=None
 ):
     """
     Loads a data file into a list of ``InputFeatures``
@@ -133,7 +134,7 @@ def glue_convert_examples_to_features(
 
         features.append(
             InputFeatures(
-                input_ids=input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids, label=label
+                input_ids=input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids, label=label, noisy=noisy
             )
         )
 
@@ -194,7 +195,7 @@ class OverallProcessor(DataProcessor):
                 text = line[2]
                 if text[3] is not None:
                     noisy = text[3]
-                examples.append(InputExample(guid=guid, label=label, text=text, noisy))
+                examples.append(InputExample_2(guid=guid, label=label, text=text, noisy=noisy))
 
 
 
