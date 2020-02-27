@@ -13,11 +13,8 @@ Some reference for what will be implemented can be found here https://www.overle
 
 
 ## Environment
-The following environment includes:
-1. Anaconda 3.7.
-2. PyTorch 1.4.
-3. TensorFlow 1.13.
-4. R. 
-5. Other dependencies can be installed using the install_dependency.sh script
+It is suggested if you want to use PyTorch and related libraries, to download the docker using the command `docker pull opencompetition/opencompetition:0.1`. Note that one should use NVidia-docker instead of docker. 
+
+To use the tensorflow libraries, it is recommended to use the official google cloud vm's support TPU training. Similarly, if one wishes to use PyTorch XLA to run PyTorch code on GPU, use Google Cloud VM as well. 
 
 
