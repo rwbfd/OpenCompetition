@@ -19,10 +19,18 @@
 import logging
 import math
 import os
+import sys
+import random
+import time
+import argparse
+from focal_loss import *
 
 import torch
 from torch import nn
-from torch.nn import CrossEntropyLoss, MSELoss
+from torch.nn import CrossEntropyLoss, MSELoss, MultiLabelMarginLoss
+import torch.optim as optim
+import torch.nn.functional as F
+from torch.autograd import Variable
 
 from .configuration_bert import BertConfig
 from .file_utils import add_start_docstrings, add_start_docstrings_to_callable
@@ -915,7 +923,15 @@ class BertForPreTraining(BertPreTrainedModel):
             loss_fct = CrossEntropyLoss()
             masked_lm_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), masked_lm_labels.view(-1))
             next_sentence_loss = loss_fct(seq_relationship_score.view(-1, 2), next_sentence_label.view(-1))
-            total_loss = masked_lm_loss + next_sentence_loss
+            #add focal loss
+            loss_focal = FocalLoss(gamma=0)
+            masked_focal_loss = loss_focal(prediction_scores.view(-1, self.config.vocab_size), masked_lm_labels.view(-1))
+            next_sentence_focal_loss = loss_focal(seq_relationship_score.view(-1, 2), next_sentence_label.view(-1))
+            #add MultiLabelMarginLoss
+            Multilabel_loss = MultiLabelMarginLoss()
+            masked_Multilabel_loss = Multilabel_loss(prediction_scores.view(-1, self.config.vocab_size), masked_lm_labels.view(-1))
+            next_sentence_Multilabel_loss = Multilabel_loss(seq_relationship_score.view(-1, 2), next_sentence_label.view(-1))
+            total_loss = masked_lm_loss + next_sentence_loss + masked_focal_loss + next_sentence_focal_loss + next_sentence_Multilabel_loss
             outputs = (total_loss,) + outputs
 
         return outputs  # (loss), prediction_scores, seq_relationship_score, (hidden_states), (attentions)
@@ -1020,7 +1036,13 @@ class BertForMaskedLM(BertPreTrainedModel):
         if masked_lm_labels is not None:
             loss_fct = CrossEntropyLoss()  # -100 index = padding token
             masked_lm_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), masked_lm_labels.view(-1))
-            outputs = (masked_lm_loss,) + outputs
+            loss_focal = FocalLoss(gamma=0)
+            masked_focal_loss = loss_focal(prediction_scores.view(-1, self.config.vocab_size), masked_lm_labels.view(-1))
+            #add multi loss
+            loss_muti = MultiLabelMarginLoss()
+            masked_muti_loss = loss_muti(prediction_scores.view(-1, self.config.vocab_size), masked_lm_labels.view(-1))
+            t_loss = masked_focal_loss + masked_lm_loss + masked_muti_loss
+            outputs = (t_loss,) + outputs
 
         if lm_labels is not None:
             # we are doing next-token prediction; shift prediction scores and input ids by one
@@ -1028,7 +1050,13 @@ class BertForMaskedLM(BertPreTrainedModel):
             lm_labels = lm_labels[:, 1:].contiguous()
             loss_fct = CrossEntropyLoss()
             ltr_lm_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), lm_labels.view(-1))
-            outputs = (ltr_lm_loss,) + outputs
+            loss_focal = FocalLoss(gamma=0)
+            ltr_focal_loss = loss_focal(pprediction_scores.view(-1, self.config.vocab_size), lm_labels.view(-1))
+            #add muti loss
+            loss_muti = MultiLabelMarginLoss()
+            masked_muti_loss = loss_muti(pprediction_scores.view(-1, self.config.vocab_size), lm_labels.view(-1))
+            t_loss = ltr_lm_loss + ltr_focal_loss + masked_muti_loss
+            outputs = (t_loss,) + outputs
 
         return outputs  # (masked_lm_loss), (ltr_lm_loss), prediction_scores, (hidden_states), (attentions)
 
@@ -1113,7 +1141,13 @@ class BertForNextSentencePrediction(BertPreTrainedModel):
         if next_sentence_label is not None:
             loss_fct = CrossEntropyLoss()
             next_sentence_loss = loss_fct(seq_relationship_score.view(-1, 2), next_sentence_label.view(-1))
-            outputs = (next_sentence_loss,) + outputs
+            loss_focal = FocalLoss(gamma=0)
+            next_sentence_loss_focal = loss_focal(seq_relationship_score.view(-1, 2), next_sentence_label.view(-1))
+            #add muti loss
+            loss_muti = MultiLabelMarginLoss()
+            next_sentence_loss_muti = loss_muti(seq_relationship_score.view(-1, 2), next_sentence_label.view(-1))
+            t_loss = next_sentence_loss + next_sentence_loss_focal + next_sentence_loss_muti
+            outputs = (t_loss,) + outputs
 
         return outputs  # (next_sentence_loss), seq_relationship_score, (hidden_states), (attentions)
 
@@ -1206,10 +1240,18 @@ class BertForSequenceClassification(BertPreTrainedModel):
             if self.num_labels == 1:
                 #  We are doing regression
                 loss_fct = MSELoss()
-                loss = loss_fct(logits.view(-1), labels.view(-1))
+                loss_focal = FocalLoss()
+                loss_muti = MultiLabelMarginLoss()
+                f_loss = loss_focal(logits.view(-1), labels.view(-1))
+                m_loss = loss_muti(logits.view(-1), labels.view(-1))
+                loss = loss_fct(logits.view(-1), labels.view(-1)) + f_loss + m_loss
             else:
+                loss_focal = FocalLoss(gamma=0)
+                f_loss = loss_focal(logits.view(-1, self.num_labels), labels.view(-1))
+                loss_muti = MultiLabelMarginLoss()
+                m_loss = loss_muti(logits.view(-1, self.num_labels), labels.view(-1))
                 loss_fct = CrossEntropyLoss()
-                loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
+                loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1)) + f_loss + m_loss
             outputs = (loss,) + outputs
 
         return outputs  # (loss), logits, (hidden_states), (attentions)
@@ -1308,8 +1350,12 @@ class BertForMultipleChoice(BertPreTrainedModel):
         outputs = (reshaped_logits,) + outputs[2:]  # add hidden states and attention if they are here
 
         if labels is not None:
+            loss_focal = FocalLoss(gamma=0)
+            f_loss = loss_focal(reshaped_logits, labels)
+            loss_muti = MultiLabelMarginLoss()
+            m_loss = loss_muti(reshaped_logits, labels)
             loss_fct = CrossEntropyLoss()
-            loss = loss_fct(reshaped_logits, labels)
+            loss = loss_fct(reshaped_logits, labels) + f_loss + m_loss
             outputs = (loss,) + outputs
 
         return outputs  # (loss), reshaped_logits, (hidden_states), (attentions)
@@ -1398,14 +1444,16 @@ class BertForTokenClassification(BertPreTrainedModel):
         outputs = (logits,) + outputs[2:]  # add hidden states and attention if they are here
         if labels is not None:
             loss_fct = CrossEntropyLoss()
+            loss_focal = FocalLoss(gamma=0)
+            loss_muti = MultiLabelMarginLoss()
             # Only keep active parts of the loss
             if attention_mask is not None:
                 active_loss = attention_mask.view(-1) == 1
                 active_logits = logits.view(-1, self.num_labels)[active_loss]
                 active_labels = labels.view(-1)[active_loss]
-                loss = loss_fct(active_logits, active_labels)
+                loss = loss_fct(active_logits, active_labels) + loss_focal(active_logits, active_labels) + loss_muti(active_logits, active_labels)
             else:
-                loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
+                loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1)) + loss_focal(logits.view(-1, self.num_labels), labels.view(-1)) + loss_muti(logits.view(-1, self.num_labels), labels.view(-1))
             outputs = (loss,) + outputs
 
         return outputs  # (loss), scores, (hidden_states), (attentions)
@@ -1519,7 +1567,15 @@ class BertForQuestionAnswering(BertPreTrainedModel):
             loss_fct = CrossEntropyLoss(ignore_index=ignored_index)
             start_loss = loss_fct(start_logits, start_positions)
             end_loss = loss_fct(end_logits, end_positions)
-            total_loss = (start_loss + end_loss) / 2
+            #add focal loss
+            loss_focal = FocalLoss()
+            start_loss_focal = loss_focal(start_logits, start_positions)
+            end_loss_focal = loss_focal(end_logits, end_positions)
+            #add muti loss
+            loss_muti = MultiLabelMarginLoss()
+            start_loss_muti = loss_muti(start_logits, start_positions)
+            end_loss_muti = loss_muti(end_logits, end_positions)
+            total_loss = (start_loss + end_loss + start_loss_focal + end_loss_focal + start_loss_muti + end_loss_muti) / 6
             outputs = (total_loss,) + outputs
 
         return outputs  # (loss), start_logits, end_logits, (hidden_states), (attentions)

@@ -168,6 +168,9 @@ def glue_convert_examples_to_features(
 
 class OverallProcessor(DataProcessor):
     """Processor for the Overall data set (GLUE version)."""
+    def _init_(self, use_text_b=False, use_noisy=False):
+        self.use_text_b = use_text_b
+        self.use_noisy = use_noisy
 
     def get_train_examples(self, data_dir):
         """See base class."""
@@ -184,22 +187,23 @@ class OverallProcessor(DataProcessor):
 
     def _create_examples(self, lines, set_type):
         """Creates examples for the training and dev sets."""
-        examples = []
-        if set_type is "MRPC":
-            for (i, line) in enumerate(lines):
-                if i == 0:
-                    continue
-                # guid = "%s-%s" % (set_type, i)
-                guid = line[0]
-                label = line[1]
-                text_a = line[2]
-                if line[3] is not None:
-                    text_b = line[3]
-                else
-                    text_b = None
-                if line[4] is not None:
-                    noisy = line[4]
-                examples.append(InputExample_2(guid=guid, label=label, text_a=text_a,text_b=text_b, noisy=noisy))
+        examples = []:
+        for (i, line) in enumerate(lines):
+            if i == 0:
+                continue
+            guid = "%s-%s" % (set_type, i)
+            #guid = line[0]
+            label = line[1]
+            text_a = line[2]
+            if self.use_text_b is False:
+                text_b = None
+            else:
+                text_b = line[3]
+            if self.use_noisy is False:
+                noisy = None
+            else:
+                noisy = line[4]
+            examples.append(InputExample_2(guid=guid, label=label, text_a=text_a,text_b=text_b, noisy=noisy))
 
 
 
