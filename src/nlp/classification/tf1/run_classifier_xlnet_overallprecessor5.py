@@ -102,6 +102,10 @@ flags.DEFINE_string("output_dir",
                     default="gs://checkpoints_for_pretrained_lm/output_xlnet",
                     help="Output dir for TF records.")
 
+flags.DEFINE_string("data_dir",
+                    default="gs://checkpoints_for_pretrained_lm/data_xlnet",
+                    help="data dir for TF records.")
+
 flags.DEFINE_string("spiece_model_file",
                     default="/home/ran_wang_math/ccf_data/pretrain_model/chinese_xlnet_mid_L-24_H-768_A-12/spiece.model",
                     help="Sentence Piece model path.")
@@ -321,7 +325,7 @@ class OverallProcessor(DataProcessor):
 
     def get_labels(self):
         """See base class."""
-        train_example = DataFrame(self.get_train_examples("gs://data_for_pretrained_lm"))
+        train_example = DataFrame(self.get_train_examples(FLAGS.data_dir))
         return [str(i) for i in list(train_example.iloc[:,1].unique())]
 
 
