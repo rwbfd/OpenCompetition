@@ -80,7 +80,38 @@ class feature_extraction:
         K = tmp / m
         return K
 
-        
+    def fCond(self, data_set,label_Wk,n):
+        #data_set shape will be [n_samples,shape] (k, m)
+        #label_Wk shape will be [n_smaples, 1]
+        m = data_set.shape[0]
+        K = 0 #meta feature
+        knn = KNeighborsClassifier(n_neighbors=n) #set neighbors to 3
+        knn.fit(data_set,label_Wk)
+        pred = knn.predict(data_set)
+        tmp = 0
+        Wl = 0
+        for i in range(m):
+            if pred[i] == label_Wk[i]:
+                tmp += 1
+        top = tmp / m
+        #calculate bottom
+        #get xk number
+        xk = []
+        wl = []
+        tmp = 0
+        for i in range(m):
+            #counting for all classifer
+            if pred[i] not in xk:
+                xk.append(pred[i])
+        for i in range(m):
+            #counting for all wl
+            if label_Wk[i] not in wl:
+                wl.append(label_Wk[i])
+        bottom = len(wl) / len(xk)
+        K = top / bottom
+        return K
+
+
 
 
 if __name__ == '__main__':
