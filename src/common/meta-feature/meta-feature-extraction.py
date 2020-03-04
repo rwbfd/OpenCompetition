@@ -143,6 +143,25 @@ class feature_extraction:
         K = (K - Min) / (Max - Min)
         return K
 
+    def fAmb(self, data_set,label_Wk,n,ci):
+        #data_set shape will be [n_samples,shape] (k, m)
+        #label_Wk shape will be [n_smaples, 1]
+        m = data_set.shape[0]
+        K = 0 #meta feature
+        knn = KNeighborsClassifier(n_neighbors=n) #set neighbors to 3
+        knn.fit(data_set,label_Wk)
+        pred = knn.predict(data_set)
+        xk = []
+        for i in range(m):
+            #counting for all classifer
+            if pred[i] not in xk:
+                xk.append(pred[i])
+        value_famb = ci(xk)
+        srt = value_famb.sort(key=int)
+        first_large = srt[0]
+        second_large = srt[1]
+        K = first_large - second_large
+        return K
 
 
 if __name__ == '__main__':
