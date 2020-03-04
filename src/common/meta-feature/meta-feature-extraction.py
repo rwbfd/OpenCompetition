@@ -194,6 +194,33 @@ class feature_extraction:
             K[i] = prc(pred[i])
         return K
 
+    def fRankOP(self, data_set,label_Wk,n):
+        #data_set shape will be [n_samples,shape] (k, m)
+        #label_Wk shape will be [n_smaples, 1]
+        m = data_set.shape[0]
+        K = 0 #meta-feature
+        knn = KNeighborsClassifier(n_neighbors=n) #set neighbors to 3
+        knn.fit(data_set,label_Wk)
+        pred = knn.predict(data_set)
+        for i in range(m):
+            if pred[i] != label_Wk[i]:
+                break
+            K += 1
+        return K
+
+    def fRank(self, data_set,label_Wk,n,ci):
+        #data_set shape will be [n_samples,shape] (k, m)
+        #label_Wk shape will be [n_smaples, 1]
+        m = data_set.shape[0]
+        K = 0 #meta-feature
+        p = ci(data_set)
+        for i in range(m):
+            if p[i] != label_Wk[i]:
+                break
+            K += 1
+        return K
+
+
 if __name__ == '__main__':
     from sklearn import datasets
     iris = datasets.load_iris()
