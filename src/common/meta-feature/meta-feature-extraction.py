@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
+import math
 
 class feature_extraction:
     def __init__(self):
@@ -163,6 +164,35 @@ class feature_extraction:
         K = first_large - second_large
         return K
 
+    def fLog(self, data_set,label_Wk,n,ci):
+        #data_set shape will be [n_samples,shape] (k, m)
+        #label_Wk shape will be [n_smaples, 1]
+        m = data_set.shape[0]
+        K = np.zeros((1,m)) #meta-feature
+        knn = KNeighborsClassifier(n_neighbors=n) #set neighbors to 3
+        knn.fit(data_set,label_Wk)
+        pred = knn.predict(data_set)
+        xk = []
+        for i in range(m):
+            #counting for all classifer
+            if pred[i] not in xk:
+                xk.append(pred[i])
+        S = ci(xk)
+        for i in range(m):
+            K[i] = 2 * (S[i] ** (math.log(2) / math.log(m))) - 1
+        return K
+
+    def fPRC(self, data_set,label_Wk,n,prc):
+        #data_set shape will be [n_samples,shape] (k, m)
+        #label_Wk shape will be [n_smaples, 1]
+        m = data_set.shape[0]
+        K = np.zeros((1,m)) #meta-feature
+        knn = KNeighborsClassifier(n_neighbors=n) #set neighbors to 3
+        knn.fit(data_set,label_Wk)
+        pred = knn.predict(data_set)
+        for i in range(m):
+            K[i] = prc(pred[i])
+        return K
 
 if __name__ == '__main__':
     from sklearn import datasets
